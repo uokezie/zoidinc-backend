@@ -10,7 +10,7 @@ const saveWishlistToDB = async (req, res) => {
 
     // Transform the incoming items
     const newItems = wishlistItems.map(item => ({
-      product: item.product?._id || item._id,
+      product: item.product?.id || item.id,
       quantity: item.quantity || 1
     }));
 
@@ -33,10 +33,10 @@ const saveWishlistToDB = async (req, res) => {
 const saveLikedListToDB = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { likedItems } = req.body;
+    const { likedProducts } = req.body;
 
     // Extract only product IDs
-    const likedProductIds = likedItems.map(item => item.product?._id || item._id);
+    const likedProductIds = likedProducts.map(item => item.product?.id || item.id);
 
     // Update or create the liked list for this user
     const likedList = await LikedList.findOneAndUpdate(
@@ -56,7 +56,11 @@ const getWishlistFromDB = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const wishlist = await Wishlist.find({ user: userId }).populate('product');
+    const wishlist = await Wishlist.findOne({ user: userId })
+      .populate({
+        path: 'items.product',
+        model: 'Product'
+      });
 
     res.status(200).json(wishlist);
   } catch (err) {
@@ -65,19 +69,27 @@ const getWishlistFromDB = async (req, res) => {
   }
 };
 
+
 // Get liked items for a user
 const getLikedListFromDB = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const likedList = await LikedList.find({ user: userId }).populate('product');
+    const likedList = await LikedList.findOne({ user: userId }).populate('likedProducts');
 
-    res.status(200).json(likedList);
+    const formattedLikedList = {
+      likedProducts: likedList?.likedProducts?.map(prod => ({
+        product: { id: prod._id.toString(), ...prod.toObject() }
+      })) || []
+    };
+
+    res.status(200).json(formattedLikedList);
   } catch (err) {
     console.error("Error fetching liked list:", err);
     res.status(500).json({ message: "Internal server error." });
   }
 };
+
 
 
 module.exports = {
