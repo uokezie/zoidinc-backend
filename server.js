@@ -8,6 +8,7 @@ const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const wishlistRoutes = require('./routes/wishlistRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const newsletterRoutes = require('./routes/newsletterRoutes'); 
 
 dotenv.config();
 connectDB(); // ✅ connect to MongoDB
@@ -20,6 +21,8 @@ app.use("/api/auth", authRoutes);
 app.use('/api', productRoutes);
 app.use('/api', categoryRoutes);
 app.use("/api", wishlistRoutes);
+app.use("/api/newsletter", newsletterRoutes);
+
 
 
 app.use("/api", paymentRoutes);

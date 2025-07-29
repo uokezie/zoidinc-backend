@@ -84,3 +84,41 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: "Login failed" });
   }
 };
+
+exports.updateUserProfile = async (req, res) => {
+  const userId = req.user?.id || req.body.id;
+
+  const allowedFields = [
+    "displayName", "username", "fullName", "phone", "state", "zip",
+    "country", "firstName", "lastName", "company", "shippingAddress",
+    "billingAddress", "city"
+  ];
+
+  const updateFields = {};
+
+  allowedFields.forEach((field) => {
+    if (req.body[field] !== undefined && req.body[field] !== "") {
+      updateFields[field] = req.body[field];
+    }
+  });
+
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateFields },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({
+      message: "Profile updated successfully",
+      user: updatedUser,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to update profile" });
+  }
+};
